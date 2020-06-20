@@ -8,8 +8,5 @@
   },
   "devDependencies": {
     "electron": "^9.0.4"
-  },
-  "dependencies": {
-    "phaser": "^3.23.0"
   }
 }
