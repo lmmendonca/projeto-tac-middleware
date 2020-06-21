@@ -7,7 +7,11 @@ class Game {
     palavrasAtuais = [];
     letrasEscolhidas = [];
     jogadores = [];
-    turnoJogador = 1;
+    pontuacao = 0;
+
+    sortearPontuacao() {
+        this.pontuacao = Math.floor(Math.random() * 1000);
+    }
 
     sortearPalavra() {
         const index = Math.floor(Math.random() * this.palavras.length);
@@ -25,11 +29,26 @@ class Game {
         ];
         this.letrasEscolhidas = [];
         this.jogadores = [
-            { id: 1 },
-            { id: 2 },
-            { id: 3 }
+            { id: 1, pontos: 0 },
+            { id: 2, pontos: 0 },
+            { id: 3, pontos: 0 }
         ];
-        this.turnoJogador = 1;
+        this.sortearPontuacao();
+    }
+
+    /**
+     * Verifica se o jogo terminou
+     */
+    isFimJogo() {
+        const palavras = this.getPalavrasAtuais();
+        const letrasFaltando = palavras.reduce((total, palavra) => {
+            const count = palavra.filter((letra) => !letra);
+            if (count.length) {
+                return total + count.length;
+            }
+            return total;
+        }, 0);
+        return !letrasFaltando;
     }
 
     /**
@@ -45,34 +64,42 @@ class Game {
     }
 
     /**
-     * Retorna os dados do jogador
-     */
-    getJogadorAtual() {
-        return this.jogadores.find((jogador) => jogador.id === this.turnoJogador);
-    }
-
-    /**
-     * Retorna o jogador do turno atual
-     */
-    getTurnoJogador() {
-        return { id: this.turnoJogador };
-    }
-
-    /**
      * Testa uma letra, e retorna as letra já escolhidas
      * @param {string} letra 
+     * @param {number} idJogador
+     * @returns {string[]} 
      */
-    testarLetra(letra) {
+    testarLetra(letra, idJogador) {
         letra = (letra || '').toUpperCase();
-        if (!this.letrasEscolhidas.includes(letra)) {
-            this.letrasEscolhidas.push(letra);
+        // Verifica se a letra já foi escolhida
+        if (!letra || this.letrasEscolhidas.includes(letra)) {
+            this.sortearPontuacao();
+            return { letras: 0 };
         }
-        if ((this.turnoJogador + 1) > this.jogadores.length) {
-            this.turnoJogador = 1;
-        } else {
-            this.turnoJogador = this.turnoJogador + 1;
+        this.letrasEscolhidas.push(letra);
+    
+        // Verifica letras encontradas
+        let count = 0;
+        this.palavrasAtuais.forEach((palavra) => {
+            const letras = palavra.split('');
+            letras.forEach((l) => {
+                if (l === letra) {
+                    count += 1;
+                }
+            });
+        });
+
+        // Adiciona pontos para o jogador
+        if (count) {
+            this.jogadores = this.jogadores.map((jogador) => {
+                if (jogador.id === idJogador) {
+                    jogador.pontos += this.pontuacao;
+                }
+                return jogador;
+            });
         }
-        return this.letrasEscolhidas;
+        this.sortearPontuacao();
+        return { letras: count };
     }
 }
 

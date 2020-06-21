@@ -3,27 +3,32 @@ const server = axios.create({
 });
 
 class GameClient {
-    async start() {
-        await server.post('/start', { tipo: 'local' });
+    tipo = 'local';
+    idJogador = 1;
+
+    async start(restart = '') {
+        try {
+            await server.get(`/start?tipo=${this.tipo}&restart=${restart}`);
+        } catch (error) {}
     }
 
-    async getPalavrasAtuais() {
-        const { data } = await server.get('/palavrasAtuais');
+    async getStatus() {
+        const { data } = await server.get('/status');
         return data;
     }
 
-    async getJogadorAtual() {
-        const { data } = await server.get('/jogadorAtual');
-        return data;
-    }
-    
-    async getTurnoJogador() {
-        const { data } = await server.get('/turnoJogador');
-        return data;
-    }
-
-    async testarLetra(letra) {
-        const { data } = await server.post('/testarLetra', { letra })
+    async play(letra) {
+        const { data } = await server.get(`/play?jogador=${this.idJogador}&letra=${letra}`);
+        // Quando o tipo é local o jogo utiliza o mesmo processo,
+        // por isso precisa alternar o usuário
+        if (this.tipo === 'local') {
+            const totalJogadores = 3;
+            if ((this.idJogador + 1) > totalJogadores) {
+                this.idJogador = 1;
+            } else {
+                this.idJogador += 1;
+            }
+        }
         return data;
     }
 }
@@ -34,27 +39,46 @@ const app = new Vue({
     data: {
         palavrasAtuais: [],
         letrasEscolhidas: [],
-        turnoJogador: {},
-        jogadorAtual: {},
+        jogadores: [],
+        jogador: {},
         letraAtual: '',
+        pontuacao: 0,
+        isFimJogo: false,
     },
     async created() {
         await game.start();
-        await this.loadState();
+        await this.getStatus();
     },
     methods: {
         async testarLetra(e) {
             e.preventDefault();
             if (this.letraAtual) {
-                this.letrasEscolhidas = await game.testarLetra(this.letraAtual);
-                await this.loadState();
+                await game.play(this.letraAtual);
+                await this.getStatus();
             }
         },
-        async loadState() {
-            this.palavrasAtuais = await game.getPalavrasAtuais();
-            this.jogadorAtual = await game.getJogadorAtual();
-            this.turnoJogador = await game.getTurnoJogador();
+        async getStatus() {
+            const {
+                palavrasAtuais,
+                letrasEscolhidas,
+                jogadores,
+                pontuacao,
+                isFimJogo,
+            } = await game.getStatus();
+
+            this.palavrasAtuais = palavrasAtuais;
+            this.letrasEscolhidas = letrasEscolhidas;
+            this.jogadores = jogadores;
+            this.pontuacao = pontuacao;
+            this.isFimJogo = isFimJogo;
+            this.jogador = jogadores.find((jogador) => {
+                return jogador.id === game.idJogador;
+            }) || {};
             this.letraAtual = '';
+        },
+        async restart() {
+            game.start(true);
+            this.getStatus();
         }
     }
 });

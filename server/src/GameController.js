@@ -7,27 +7,45 @@ class GameController {
     middleware = new GameLocal();
 
     start(req, res) {
-        if (req.body.tipo === 'local') {
+        // Verifica se o jogo já foi iniciado
+        if (this.middleware && this.middleware.palavrasAtuais.length && !req.query.restart) {
+            res.status(400).send({ message: 'Já existe um jogo em andamento!' });
+            return;
+        }
+        // Verifica o tipo de middleware
+        if (!req.query.tipo || req.query.tipo === 'local') {
             this.middleware = new GameLocal();
         }
-        // verificar demais tipos ..
-        res.send(this.middleware.start());
+        // inicia o jogo
+        this.middleware.start();
+        res.send({ message: 'Jogo iniciado' });
     }
 
-    getPalavrasAtuais(req, res) {
-        res.send(this.middleware.getPalavrasAtuais());
+    getStatus(req, res) {
+        res.send({
+            palavrasAtuais: this.middleware.getPalavrasAtuais(),
+            letrasEscolhidas: this.middleware.letrasEscolhidas,
+            jogadores: this.middleware.jogadores,
+            pontuacao: this.middleware.pontuacao,
+            isFimJogo: this.middleware.isFimJogo(),
+        });
     }
 
-    getJogadorAtual(req, res) {
-        res.send(this.middleware.getJogadorAtual());
-    }
-
-    getTurnoJogador(req, res) {
-        res.send(this.middleware.getTurnoJogador());
-    }
-
-    testarLetra(req, res) {
-        res.send(this.middleware.testarLetra(req.body.letra));
+    play(req, res) {
+        if (!req.query.letra) {
+            res.status(400).send({ message: 'Informe uma letra!' });
+            return;
+        }
+        if (!req.query.jogador) {
+            res.status(400).send({ message: 'Informe o jogador!' });
+            return;
+        }
+        res.send(
+            this.middleware.testarLetra(
+                req.query.letra,
+                Number(req.query.jogador)
+            )
+        );
     }
 }
 
