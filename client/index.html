@@ -1,15 +1,101 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Hello World!</title>
-    <!-- https://electronjs.org/docs/tutorial/security#csp-meta-tag -->
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    We are using node <script>document.write(process.versions.node)</script>,
-    Chrome <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
-  </body>
+
+<head>
+  <title>Jogo da Forca</title>
+  <script src="https://unpkg.com/vue"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+</head>
+
+<body>
+  <div id="app" class="container">
+    <div class="columns">
+      <div class="column" style="text-align: center; margin-top: 10px;">
+        <span>
+          <h1 style="font-size: 2.3em;">Jogo da forca</h1>
+        </span>
+      </div>
+    </div>
+    <div class="columns">
+      <div class="column col-6 col-mx-auto">
+        <div v-for="(palavra, index) in palavrasAtuais" :key="index" class="columns">
+          <div
+            v-for="(letra, index) in palavra"
+            :key="index"
+            class="column col-1"
+            style="margin-bottom: 15px;"
+          >
+            <span :class="!letra ? 'label' : 'label label-success'" style="padding: 7px 10px;">
+              {{letra|| '_'}}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="divider" style="margin-top: 10px; margin-bottom: 10px;"></div>
+    <span v-if="!isFimJogo">
+      <div class="columns">
+        <div class="column col-8 col-mx-auto">
+          <div class="row">
+            <div class="column">
+              <h4>Jogador {{jogador.id}} <span style="font-size: .7em">- Valendo {{pontuacao}} pontos</span></h4>
+            </div>
+          </div>
+          <form class="form-horizontal">
+            <div class="form-group">
+              <div class="column col-4">
+                <label class="form-label label-lg">Escolha uma letra:</label>
+              </div>
+              <div class="column col-4">
+                <input class="form-input" type="text" maxlength="1" v-model="letraAtual">
+              </div>
+              <div class="column col-4">
+                <button class="btn" style="width: 100%;" @click="testarLetra">Confirmar</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="divider" style="margin-top: 10px; margin-bottom: 10px;"></div>
+      <div class="columns">
+        <div class="column col-8 col-mx-auto">
+          <p>Letras já escolhidas:</p>
+          <div class="columns">
+            <div v-for="(letra, index) in letrasEscolhidas" :key="index" class="column col-1">
+              <span class="label" style="padding: 5px;">{{letra}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </span>
+    <span v-else>
+      <div class="columns">
+        <div class="column col-8 col-mx-auto" style="text-align: center; color: #e74c3c;">
+          <h2>Fim do Jogo!</h2>
+        </div>
+        <div class="column col-8 col-mx-auto" style="text-align: center; color: #e74c3c;">
+          <button class="btn" @click="restart">Reiniciar</button>
+        </div>
+      </div>
+    </span>
+
+    <div class="divider" style="margin-top: 10px; margin-bottom: 10x;"></div>
+
+    <div class="columns">
+      <div class="column col-10 col-mx-auto" style="text-align: center;">
+        <p>Pontuação</p>
+        <div class="columns">
+          <div class="column col-4" v-for="(jogador, index) in jogadores" :key="index">
+            Jogador {{jogador.id}}: {{jogador.pontos}} pts
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="scripts/game.js"></script>
+</body>
+
 </html>
