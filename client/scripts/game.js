@@ -2,14 +2,24 @@ const server = axios.create({
     baseURL: 'http://localhost:3000',
 });
 
+var socket = io('http://localhost:3000');
+socket.on('connect', function () { });
+socket.on('disconnect', function () { });
+
 class GameClient {
-    tipo = 'local';
+    // tipo = 'local';
+    tipo = 'multiprocessado';
     idJogador = 1;
 
     async start(restart = '') {
         try {
-            await server.get(`/start?tipo=${this.tipo}&restart=${restart}`);
-        } catch (error) {}
+            const { data } = await server.get(`/start?tipo=${this.tipo}&restart=${restart}`);
+            if (this.tipo !== 'local') {
+                this.idJogador = data.jogador;
+            }
+        } catch (error) {
+            console.log(error);
+         }
     }
 
     async getStatus() {
@@ -80,5 +90,12 @@ const app = new Vue({
             game.start(true);
             this.getStatus();
         }
+    }
+});
+
+socket.on('broadcast', function (data) {
+    if (game.tipo === 'multiprocessado') {
+        console.log('DATA', data);
+        app.getStatus();
     }
 });
