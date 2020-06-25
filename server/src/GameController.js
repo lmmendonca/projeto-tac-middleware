@@ -26,6 +26,8 @@ class GameController {
             this.middleware = new GameLocal();
         } else if (req.query.tipo === 'multiprocessado') {
             this.middleware = new GameMultiprocessado();
+        } else if (req.query.tipo === 'rpc') {
+            this.middleware = new GameRPC();
         }
 
         // inicia o jogo
@@ -56,7 +58,7 @@ class GameController {
             req.query.letra,
             Number(req.query.jogador)
         );
-        this.io.emit('broadcast', {});
+        this.io.emit('broadcast', result);
         res.send(result);
     }
 }
